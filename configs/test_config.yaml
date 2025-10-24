@@ -1,0 +1,12 @@
+dataset:
+  datasets_directory: "../datasets"
+
+parameters:
+  using_one_to_one_matching: true
+  using_background_matches: false
+  using_all_points_for_fitting: true
+
+sampling_method: "RY-sampling"
+
+output_directory: "/big/chenye/result/RY-SlopeSearch"
+
