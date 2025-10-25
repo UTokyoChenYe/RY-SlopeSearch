@@ -1,5 +1,5 @@
 dataset:
-  datasets_directory: "/big/chenye/data/RY-SlopeSearch/test_dataset/test"
+  datasets_directory: "/big/chenye/data/RY-SlopeSearch/test_dataset/real"
 
 parameters:
   using_one_to_one_matching: true
