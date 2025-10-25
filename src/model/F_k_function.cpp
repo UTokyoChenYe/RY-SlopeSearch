@@ -1,5 +1,5 @@
 #include "model/F_k_function.hpp"
-#include "model/matches_tool.hpp"
+#include "model/match_tool.hpp"
 #include <cmath>
 #include <numeric>
 
@@ -8,9 +8,12 @@ FKFunction::FKFunction(const std::string& s1, const std::string& s2, const Confi
     L1 = seq1.size();
     L2 = seq2.size();
     L_avg = (L1 + L2) / 2.0;
+    
+    int pattern_length = kmer_sampling_methods.at(cfg.sampling_method).get()[0].size();
 
-    k_min = std::ceil((std::log(L_avg) + 0.69) / 0.875);
-    k_max = std::floor(std::log(L_avg) / 0.634);
+    k_min = std::max(static_cast<int>(std::ceil((std::log(L_avg) + 0.69) / 0.875)), pattern_length);
+    k_max = std::max(static_cast<int>(std::floor(std::log(L_avg) / 0.634)), pattern_length);
+    if (k_min < pattern_length) logger.warn("k_min < pattern_length, adjusted to pattern_length");
     logger.info("Initialized FKFunction with k range: " + std::to_string(k_min) + "-" + std::to_string(k_max));
 }
 

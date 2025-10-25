@@ -1,12 +1,12 @@
 dataset:
-  datasets_directory: "../datasets"
+  datasets_directory: "/big/chenye/data/RY-SlopeSearch/test_dataset/test"
 
 parameters:
   using_one_to_one_matching: true
   using_background_matches: false
   using_all_points_for_fitting: true
 
-sampling_method: "RY-sampling"
+sampling_method: "start_ry_4_push_matches"
 
 output_directory: "/big/chenye/result/RY-SlopeSearch"
 

@@ -16,3 +16,12 @@ std::string reverse_complement(const std::string& seq) {
     }
     return rc;
 }
+
+std::string to_ry(const std::string& sequence) {
+    std::string result = sequence;
+    for (char& c : result) {
+        if (c == 'A' || c == 'G') c = 'r';
+        else if (c == 'C' || c == 'T') c = 'y';
+    }
+    return result;
+}
