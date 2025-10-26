@@ -3,10 +3,21 @@ dataset:
 
 parameters:
   using_one_to_one_matching: true
-  using_background_matches: false
-  using_all_points_for_fitting: true
+  using_background_matches: true
+  use_openmp: true
 
-sampling_method: "start_ry_4_push_matches"
+# methods
+#   basic_kmer_matches
+#   start_ry_matches
+#   start_rr_matches
+#   start_ry_4_6_matches
+#   start_ry_4_9_matches
+#   start_ry_4_push_matches
+#   start_ry_4_pull_matches
+sampling_method: "basic_kmer_matches"
+
+draw_F_k_function: true
+draw_k_max: 30 # if draw_F_k_function is true, the k_max will be used
 
 output_directory: "/big/chenye/result/RY-SlopeSearch"
 

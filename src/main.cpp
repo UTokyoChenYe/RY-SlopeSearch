@@ -9,8 +9,10 @@
 #include <tuple>
 #include <vector>
 #include <string>
+#include <set>
 #include <iomanip>
 #include <chrono>
+#include <omp.h>
 
 int main(int argc, char** argv) {
     // === 解析命令行参数 ===
@@ -34,14 +36,35 @@ int main(int argc, char** argv) {
     logger.info("Output directory: " + output_dir);
     logger.info("Output file: " + logger.get_log_filename());
 
-    // === 记录 YAML config 内容到 log ===
+    // === start performance logging ===
+    std::string thread_log_path = output_dir + "/performance_info.log";
+    std::ofstream thread_log(thread_log_path);
+    if (!thread_log) {
+        logger.error("Failed to open performance info log file: " + thread_log_path);
+        return 1;
+    }
+
+    // 用 set 存唯一线程 ID
+    std::set<int> used_thread_ids;
+    #pragma omp parallel
     {
-        std::ifstream config_file(config_path);
-        if (config_file) {
-            std::stringstream buffer;
-            buffer << config_file.rdbuf();
-            logger.log_config_yaml(buffer.str());
+        #pragma omp critical
+        used_thread_ids.insert(omp_get_thread_num());
+    }
+
+    // === 记录 YAML config 内容到 log ===
+    std::string config_log_path = output_dir + "/config_used.yaml"; 
+    std::ifstream config_file(config_path);
+    if (config_file) {
+        std::ofstream config_log(config_log_path);  // 或用更好的路径控制方式
+        if (config_log) {
+            config_log << config_file.rdbuf();
+            config_log.close();
+        } else {
+            logger.warn("Failed to open config_used.yaml for writing.");
         }
+    } else {
+        logger.warn("Failed to open config file: " + config_path);
     }
 
     // === 加载序列 ===
@@ -58,18 +81,71 @@ int main(int argc, char** argv) {
 
     // === 计算距离矩阵 ===
     logger.info("Computing pairwise distances...");
+    
     std::vector<std::vector<float>> distance_matrix(N, std::vector<float>(N, 0.0f));
 
+    auto start_time = std::chrono::high_resolution_clock::now();  // 开始计时
+
+    #pragma omp parallel for schedule(dynamic) collapse(1) if(cfg.use_openmp)  // OpenMP 控制
     for (size_t i = 0; i < N; ++i) {
+        // === 打印线程信息 ===
+        int thread_id = omp_get_thread_num();
+        int thread_count = omp_get_num_threads();
+
+        #pragma omp critical
+        {
+            logger.info("OpenMP thread ID: " + std::to_string(thread_id) +
+                        " / total threads: " + std::to_string(thread_count));
+            used_thread_ids.insert(thread_id);
+        }
+
         for (size_t j = i + 1; j < N; ++j) {  // 只计算上三角部分
             FKFunction fk(sequences[i], sequences[j], cfg, logger);
             double p_hat = fk.calculate_p_hat();
+
+            // === 绘制 Fk 函数 ===
+            if (cfg.draw_F_k_function) {
+                std::string pair_name = "seq_" + names[i] + "_vs_seq_" + names[j];
+                std::string fk_csv_path = output_dir + "/" + pair_name + "_Fk.csv";
+                std::ofstream fk_out(fk_csv_path);
+                if (!fk_out) {
+                    logger.error("Failed to write Fk CSV file: " + fk_csv_path);
+                    continue;
+                } else {
+                    fk_out << "k,Fk,log_Fk\n";
+                    for (size_t idx = 0; idx < fk.k_vals.size(); ++idx) {
+                        fk_out << fk.k_vals[idx] << "," << fk.Fk[idx] << "," << fk.Fk_log[idx] << "\n";
+                    }
+                    fk_out.close();
+                    logger.info("Saved Fk curve to: " + fk_csv_path);
+                }
+            }
+
+            // === 计算进化距离 ===
             float distance = estimate_jukes_cantor_distance(static_cast<float>(p_hat), logger);
-    
-            distance_matrix[i][j] = distance;
-            distance_matrix[j][i] = distance;  // 对称赋值
+            
+            #pragma omp critical // OpenMP 多线程写入二维数组时，需要保护或避免数据冲突
+            {
+                distance_matrix[i][j] = distance;
+                distance_matrix[j][i] = distance;  // 对称赋值
+            }
         }
     }
+
+    auto end_time = std::chrono::high_resolution_clock::now();  // 结束计时
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+
+    thread_log << "Distance matrix computation took "
+           << duration.count() << " milliseconds\n";
+    thread_log << "Unique OpenMP threads used: " << used_thread_ids.size() << "\n";
+    thread_log << "Thread IDs: ";
+    for (int tid : used_thread_ids) {
+        thread_log << tid << " ";
+    }
+    thread_log << "\n";
+    thread_log.close();  // 关闭日志
+
+    // logger.info("Distance matrix computation took " + std::to_string(duration.count()) + " milliseconds");
 
     // === 保存 PHYLIP 文件 ===
     auto now = std::chrono::system_clock::now();
