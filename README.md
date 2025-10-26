@@ -38,7 +38,7 @@ The parameters of configs
 | `output_directory`            | Specifies the path where the output files will be saved.                             |
 - `fasta` files should be collected under `dataset.datasets_directory`
 - each `fasta` file has one genome
-- out:
+- output:
   - a time stamp folder will be created under `output_directory`, your results are in there
   - results includes:
     - config you used
