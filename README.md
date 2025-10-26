@@ -15,9 +15,10 @@ Here is the offical source code of RY-SlopeSearch, which is an slope-based align
 ### Installing
 ```shell
 git clone git@github.com:UTokyoChenYe/RY-SlopeSearch.git
+git submodule update --init --recursive
 cd RY-SlopeSearch
-mkdir build
-cmake .. //Using GCC >= 12.3.0
+mkdir build && cd build
+cmake .. //Using GCC >= 12.3.0 (example)cmake .. -DCMAKE_C_COMPILER=/usr/bin/gcc-12 -DCMAKE_CXX_COMPILER=/usr/bin/g++-12
 make
 ```
 ### How to use
