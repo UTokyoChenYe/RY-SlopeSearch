@@ -12,11 +12,7 @@
 #include <map>
 #include <functional>  // for std::reference_wrapper
 
-// 功能说明：
-// 对于每种抽样方法（method），将序列转为 RY 序列（A/G→r，C/T→y），
-// 仅保留开头为指定词集（如 ry_patterns）之一的 k-mer。
-
-// 从序列中抽取符合给定 RY pattern 集合的 k-mer
+// mapping of sampling methods to their corresponding patterns
 const std::map<std::string, std::reference_wrapper<const std::vector<std::string>>> kmer_sampling_methods = {
     {"basic_kmer_matches", std::cref(basic_patterns)},
     {"start_ry_matches", std::cref(ry_patterns)},
@@ -27,6 +23,7 @@ const std::map<std::string, std::reference_wrapper<const std::vector<std::string
     {"start_ry_4_pull_matches", std::cref(ry_4_pull_patterns)},
 };
 
+// extract k-mers with specified pattern
 std::vector<std::string> extract_kmers_with_pattern(const std::vector<std::string>& sequences, int k, const std::string& method) {
     std::set<std::string> patterns;
     int pattern_length = 0;
@@ -59,7 +56,7 @@ std::vector<std::string> extract_kmers_with_pattern(const std::vector<std::strin
     return result;
 }
 
-// 基于指定方法计算两个序列的 k-mer 匹配数目
+// calculate k-mer matches based on specified method
 int calculate_kmer_matches(const std::string& seq1_in, const std::string& seq2_in, int k, bool use_one_to_one, const std::string& method) {
     std::vector<std::string> seq1_list = { seq1_in };
     std::vector<std::string> seq2_list = { seq2_in };

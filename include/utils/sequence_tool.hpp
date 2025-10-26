@@ -2,17 +2,17 @@
 #include <string>
 
 /**
- * @brief 获取 DNA 序列的反向互补序列
+ * @brief get reverse complement of DNA sequence
  * 
- * @param seq 原始 DNA 序列（仅包含 A, T, C, G）
- * @return std::string 反向互补序列
+ * @param seq original DNA sequence (only contains A, T, C, G)
+ * @return std::string reverse complement sequence
  */
 std::string reverse_complement(const std::string& seq);
 
 /**
- * @brief 将 DNA 序列转换为 RY 序列
+ * @brief convert DNA sequence to RY sequence
  * 
- * @param sequence 原始 DNA 序列
- * @return std::string RY 序列
+ * @param sequence original DNA sequence
+ * @return std::string RY sequence
  */
 std::string to_ry(const std::string& sequence);

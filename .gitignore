@@ -1,4 +1,4 @@
-# 忽略 CMake 生成的构建文件
+# ignore CMake generated build files
 /build/
 /CMakeFiles/
 /CMakeCache.txt
@@ -11,24 +11,24 @@
 /*.dll
 /*.exe
 
-# 忽略 IDE 生成的文件
+# ignore IDE generated files
 *.idea/
 *.vscode/
 *.swp
 *.swo
 
-# 忽略二进制文件
+# ignore binary files
 bin/
 *.out
 
-# 忽略日志文件
+# ignore log files
 *.log
 
-# 忽略 yaml-cpp 的编译文件
+# ignore yaml-cpp's compile files
 third_party/yaml-cpp/build/
 third_party/yaml-cpp/CMakeFiles/
 third_party/yaml-cpp/CMakeCache.txt
 third_party/yaml-cpp/*.cmake
 
-# 忽略vscode的配置文件
+# ignore vscode's config files
 .vscode/

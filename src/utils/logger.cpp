@@ -3,18 +3,18 @@
 Logger::Logger(const std::string& log_root_dir) {
     namespace fs = std::filesystem;
 
-    // 生成基于时间戳的子目录
+    // generate subdirectory based on timestamp
     std::string time_str = timestamp(true);
     log_directory = log_root_dir + "/" + time_str;
 
-    // 创建目录
+    // create directory
     fs::create_directories(log_directory);
 
-    // 构建日志文件路径
+    // build log file path
     log_filename = time_str + ".log";
     std::string log_path = log_directory + "/" + log_filename;
 
-    // 打开日志文件
+    // open log file
     logfile.open(log_path, std::ios::app);
 }
 
@@ -30,10 +30,10 @@ std::string Logger::timestamp(bool for_path) {
     char buf[64];
 
     if (for_path) {
-        // 用于路径：2025-10-25_20-45-33
+        // for path: 2025-10-25_20-45-33
         std::strftime(buf, sizeof(buf), "%Y-%m-%d_%H-%M-%S", tm);
     } else {
-        // 用于日志行：2025-10-25 20:45:33
+        // for log line: 2025-10-25 20:45:33
         std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tm);
     }
 

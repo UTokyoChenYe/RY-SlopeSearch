@@ -11,7 +11,7 @@ public:
     explicit Logger(const std::string& log_root_dir);
     ~Logger();
 
-    // 日志输出函数
+    // log output function
     template<typename T>
     void info(const T& msg) { write("INFO", msg); }
 
@@ -21,10 +21,10 @@ public:
     template<typename T>
     void error(const T& msg) { write("ERROR", msg); }
 
-    // 记录完整配置文件（YAML）
+    // log complete configuration file (YAML)
     void log_config_yaml(const std::string& config_yaml);
 
-    // 获取日志目录与文件名
+    // get log directory and filename
     std::string get_log_directory() const { return log_directory; }
     std::string get_log_filename() const { return log_filename; }
 

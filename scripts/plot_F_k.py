@@ -23,7 +23,7 @@ def plot_fk(files, use_log_fk=False, save_path=None):
 
     if save_path:
         plt.savefig(save_path)
-        print(f"保存图像到 {save_path}")
+        print(f"Save image to {save_path}")
     else:
         plt.show()
 
