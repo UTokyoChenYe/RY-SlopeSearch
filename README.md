@@ -1,6 +1,6 @@
 # RY-SlopeSearch
 ## Introduction
-Here is the source code of RY-SlopeSearch, which is an slope-based alignment-free algorithms for fast DNA seqs comparision.
+Here is the offical source code of RY-SlopeSearch, which is an slope-based alignment-free algorithms for fast DNA seqs comparision.
 
 ## Getting Start
 ### Requirements
