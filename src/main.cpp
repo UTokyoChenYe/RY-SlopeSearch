@@ -15,7 +15,7 @@
 #include <omp.h>
 
 int main(int argc, char** argv) {
-    // === 解析命令行参数 ===
+    // === parse command line arguments ===
     std::string config_path;
     for (int i = 0; i < argc - 1; ++i) {
         if (std::string(argv[i]) == "--config") {
@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // === 加载配置 ===
+    // === load config ===
     Config cfg = load_config(config_path);
     Logger logger(cfg.output_directory);
     logger.info("Program started");
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
     logger.info("Output directory: " + output_dir);
     logger.info("Output file: " + logger.get_log_filename());
 
-    // === start performance logging ===
+    // === start logging performance info ===
     std::string thread_log_path = output_dir + "/performance_info.log";
     std::ofstream thread_log(thread_log_path);
     if (!thread_log) {
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // 用 set 存唯一线程 ID
+    // use set to store unique thread IDs
     std::set<int> used_thread_ids;
     #pragma omp parallel
     {
@@ -52,11 +52,11 @@ int main(int argc, char** argv) {
         used_thread_ids.insert(omp_get_thread_num());
     }
 
-    // === 记录 YAML config 内容到 log ===
+    // === record YAML config content to log ===
     std::string config_log_path = output_dir + "/config_used.yaml"; 
     std::ifstream config_file(config_path);
     if (config_file) {
-        std::ofstream config_log(config_log_path);  // 或用更好的路径控制方式
+        std::ofstream config_log(config_log_path);  // or use better path control way
         if (config_log) {
             config_log << config_file.rdbuf();
             config_log.close();
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
         logger.warn("Failed to open config file: " + config_path);
     }
 
-    // === 加载序列 ===
+    // === load sequences ===
     logger.info("Loading sequences from directory: " + cfg.datasets_directory);
     auto [names, sequences] = load_sequences_from_multiple_files(cfg.datasets_directory);
     size_t N = sequences.size();
@@ -79,16 +79,16 @@ int main(int argc, char** argv) {
 
     logger.info("Loaded " + std::to_string(N) + " sequences");
 
-    // === 计算距离矩阵 ===
+    // === compute distance matrix ===
     logger.info("Computing pairwise distances...");
     
     std::vector<std::vector<float>> distance_matrix(N, std::vector<float>(N, 0.0f));
 
-    auto start_time = std::chrono::high_resolution_clock::now();  // 开始计时
+    auto start_time = std::chrono::high_resolution_clock::now();  // start timing
 
-    #pragma omp parallel for schedule(dynamic) collapse(1) if(cfg.use_openmp)  // OpenMP 控制
+    #pragma omp parallel for schedule(dynamic) collapse(1) if(cfg.use_openmp)  // OpenMP control
     for (size_t i = 0; i < N; ++i) {
-        // === 打印线程信息 ===
+        // === print thread info ===
         int thread_id = omp_get_thread_num();
         int thread_count = omp_get_num_threads();
 
@@ -99,11 +99,11 @@ int main(int argc, char** argv) {
             used_thread_ids.insert(thread_id);
         }
 
-        for (size_t j = i + 1; j < N; ++j) {  // 只计算上三角部分
+        for (size_t j = i + 1; j < N; ++j) {  // only compute upper triangle part
             FKFunction fk(sequences[i], sequences[j], cfg, logger);
             double p_hat = fk.calculate_p_hat();
 
-            // === 绘制 Fk 函数 ===
+            // === draw Fk function ===
             if (cfg.draw_F_k_function) {
                 std::string pair_name = "seq_" + names[i] + "_vs_seq_" + names[j];
                 std::string fk_csv_path = output_dir + "/" + pair_name + "_Fk.csv";
@@ -121,18 +121,18 @@ int main(int argc, char** argv) {
                 }
             }
 
-            // === 计算进化距离 ===
+            // === compute evolutionary distance ===
             float distance = estimate_jukes_cantor_distance(static_cast<float>(p_hat), logger);
             
-            #pragma omp critical // OpenMP 多线程写入二维数组时，需要保护或避免数据冲突
+            #pragma omp critical // when multiple threads write to 2D array, need to protect or avoid data conflict
             {
                 distance_matrix[i][j] = distance;
-                distance_matrix[j][i] = distance;  // 对称赋值
+                distance_matrix[j][i] = distance;  // symmetric assignment
             }
         }
     }
 
-    auto end_time = std::chrono::high_resolution_clock::now();  // 结束计时
+    auto end_time = std::chrono::high_resolution_clock::now();  // end timing
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
     thread_log << "Distance matrix computation took "
@@ -143,11 +143,11 @@ int main(int argc, char** argv) {
         thread_log << tid << " ";
     }
     thread_log << "\n";
-    thread_log.close();  // 关闭日志
+    thread_log.close();  // close log
 
     // logger.info("Distance matrix computation took " + std::to_string(duration.count()) + " milliseconds");
 
-    // === 保存 PHYLIP 文件 ===
+    // === save PHYLIP file ===
     auto now = std::chrono::system_clock::now();
     std::time_t now_c = std::chrono::system_clock::to_time_t(now);
     std::stringstream time_ss;
