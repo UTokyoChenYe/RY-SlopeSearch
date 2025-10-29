@@ -3,6 +3,7 @@
 #include "model/F_k_function.hpp"
 #include "utils/evolution_model.hpp"
 #include "utils/file_system.hpp"
+#include "utils/progress_bar.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -84,6 +85,8 @@ int main(int argc, char** argv) {
     
     std::vector<std::vector<float>> distance_matrix(N, std::vector<float>(N, 0.0f));
 
+    ProgressBar progress_bar(static_cast<size_t>(N * (N - 1) / 2), "Computing pairwise distances", cfg.use_progress_bar);
+    progress_bar.start();
     auto start_time = std::chrono::high_resolution_clock::now();  // start timing
 
     #pragma omp parallel for schedule(dynamic) collapse(1) if(cfg.use_openmp)  // OpenMP control
@@ -129,8 +132,11 @@ int main(int argc, char** argv) {
                 distance_matrix[i][j] = distance;
                 distance_matrix[j][i] = distance;  // symmetric assignment
             }
+            progress_bar.increment();
         }
     }
+
+    progress_bar.finish();
 
     auto end_time = std::chrono::high_resolution_clock::now();  // end timing
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);

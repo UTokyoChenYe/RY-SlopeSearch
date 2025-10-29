@@ -12,5 +12,6 @@ Config load_config(const std::string& config_path) {
     cfg.draw_k_max = config["draw_k_max"].as<int>();
     cfg.sampling_method = config["sampling_method"].as<std::string>();
     cfg.output_directory = config["output_directory"].as<std::string>();
+    cfg.use_progress_bar = config["use_progress_bar"].as<bool>();
     return cfg;
 }

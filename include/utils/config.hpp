@@ -10,6 +10,7 @@ struct Config {
     int draw_k_max;
     std::string sampling_method;
     std::string output_directory;
+    bool use_progress_bar;
 };
 
 Config load_config(const std::string& config_path);

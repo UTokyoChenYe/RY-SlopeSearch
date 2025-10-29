@@ -1,5 +1,5 @@
 dataset:
-  datasets_directory: "/big/chenye/data/RY-SlopeSearch/test_dataset/real"
+  datasets_directory: "/big/chenye/data/RY-SlopeSearch/af_project_dataset/AF-reference_datasets190511/genome-std-assembled-fish_mito/dataset/assembled-fish_mito"
 
 parameters:
   using_one_to_one_matching: true
@@ -16,8 +16,9 @@ parameters:
 #   start_ry_4_pull_matches
 sampling_method: "basic_kmer_matches"
 
-draw_F_k_function: true
+draw_F_k_function: false
 draw_k_max: 30 # if draw_F_k_function is true, the k_max will be used
 
 output_directory: "/big/chenye/result/RY-SlopeSearch"
 
+use_progress_bar: false
