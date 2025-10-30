@@ -21,4 +21,4 @@ draw_k_max: 30 # if draw_F_k_function is true, the k_max will be used
 
 output_directory: "/big/chenye/result/RY-SlopeSearch"
 
-use_progress_bar: false
+use_progress_bar: true

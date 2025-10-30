@@ -47,5 +47,5 @@ void ProgressBar::display() {
     std::cout << "] " << std::fixed << std::setprecision(1)
               << (progress * 100.0) << "% ("
               << current_steps << "/" << total_steps << ") "
-              << std::setprecision(2) << elapsed_sec << "s elapsed" << std::flush;
+              << std::setprecision(2) << elapsed_sec << "s elapsed" << std::endl;
 }
