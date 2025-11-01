@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
         int thread_id = omp_get_thread_num();
         int thread_count = omp_get_num_threads();
 
-        #pragma omp critical
+        #pragma omp critical(logger_write_critical)
         {
             logger.info("OpenMP thread ID: " + std::to_string(thread_id) +
                         " / total threads: " + std::to_string(thread_count));
@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
             // === compute evolutionary distance ===
             float distance = estimate_jukes_cantor_distance(static_cast<float>(p_hat), logger);
             
-            #pragma omp critical // when multiple threads write to 2D array, need to protect or avoid data conflict
+            #pragma omp critical(distance_matrix_write_critical) // when multiple threads write to 2D array, need to protect or avoid data conflict
             {
                 distance_matrix[i][j] = distance;
                 distance_matrix[j][i] = distance;  // symmetric assignment
