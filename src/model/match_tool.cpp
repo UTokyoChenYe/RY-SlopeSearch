@@ -8,51 +8,48 @@
 #include <algorithm>
 #include <cmath>
 #include <set>
-#include <stdexcept>
-#include <map>
-#include <functional>  // for std::reference_wrapper
-
-// mapping of sampling methods to their corresponding patterns
-const std::map<std::string, std::reference_wrapper<const std::vector<std::string>>> kmer_sampling_methods = {
-    {"basic_kmer_matches", std::cref(basic_patterns)},
-    {"start_ry_matches", std::cref(ry_patterns)},
-    {"start_rr_matches", std::cref(rr_patterns)},
-    {"start_ry_4_6_matches", std::cref(ry_4_6_patterns)},
-    {"start_ry_4_9_matches", std::cref(ry_4_9_patterns)},
-    {"start_ry_4_push_matches", std::cref(ry_4_push_patterns)},
-    {"start_ry_4_pull_matches", std::cref(ry_4_pull_patterns)},
-};
 
 // extract k-mers with specified pattern
-std::vector<std::string> extract_kmers_with_pattern(const std::vector<std::string>& sequences, int k, const std::string& method) {
-    std::set<std::string> patterns;
-    int pattern_length = 0;
+std::vector<size_t> extract_kmers_with_pattern(const std::vector<std::string>& sequences, int k, const std::string& method) {
+    const auto& patterns_vec = get_patterns(method);
+    int pattern_length = get_pattern_length(method);
+    std::set<std::string> patterns(patterns_vec.begin(), patterns_vec.end());
 
-    auto it = kmer_sampling_methods.find(method);
-    if (it != kmer_sampling_methods.end()) {
-        const auto& vec = it->second.get();
-        patterns = std::set<std::string>(vec.begin(), vec.end());
-        if (!patterns.empty()) {
-            pattern_length = patterns.begin()->size();
-        } else {
-            throw std::runtime_error("Pattern vector is empty for method: " + method);
+    std::vector<size_t> result;
+
+    // map the DNA k-mer to a number
+    char dna_kmer_to_num[128] = {0};
+    dna_kmer_to_num['A'] = 0;
+    dna_kmer_to_num['C'] = 1;
+    dna_kmer_to_num['G'] = 2;
+    dna_kmer_to_num['T'] = 3;
+    
+    // patterns lookup table
+    size_t table_size = 1 << pattern_length; // 2^pattern_length
+    std::vector<char> table(table_size);
+    for (const auto& pattern : patterns) {
+        size_t pattern_num = 0;
+        for (auto j : pattern) {
+            pattern_num = pattern_num * 2 + (j == 'y');
         }
-    } else {
-        throw std::runtime_error("Unknown RY sampling method: " + method);
+        table[pattern_num] = 1;
     }
 
-    std::vector<std::string> result;
-
     for (const auto& seq : sequences) {
-        std::string ry_seq = to_ry(seq);
-        for (size_t i = 0; i + k <= seq.size() && i + pattern_length <= ry_seq.size(); ++i) {
-            std::string ry_prefix = ry_seq.substr(i, pattern_length);
-            if (patterns.count(ry_prefix)) {
-                result.emplace_back(seq.substr(i, k));
+        size_t pattern_num = 0;
+        for (size_t i = 0; i + k <= seq.size(); ++i) {
+            pattern_num = pattern_num * 2 + (seq[i] == 'C' || seq[i] == 'T');
+            if (i < pattern_length - 1) continue;
+            pattern_num = pattern_num & (table_size - 1);
+            if (table[pattern_num]) {
+                size_t dna_kmer_num = 0;
+                for (size_t j = 0; j < k; ++j) {
+                    dna_kmer_num = dna_kmer_num * 4 + dna_kmer_to_num[seq[i - pattern_length + 1 + j]];
+                }
+                result.emplace_back(dna_kmer_num);
             }
         }
     }
-
     return result;
 }
 
@@ -64,7 +61,7 @@ int calculate_kmer_matches(const std::string& seq1_in, const std::string& seq2_i
     auto kmer_list1 = extract_kmers_with_pattern(seq1_list, k, method);
     auto kmer_list2 = extract_kmers_with_pattern(seq2_list, k, method);
 
-    std::unordered_map<std::string, int> kmer_count1, kmer_count2;
+    std::unordered_map<size_t, int> kmer_count1, kmer_count2;
     for (const auto& kmer : kmer_list1) ++kmer_count1[kmer];
     for (const auto& kmer : kmer_list2) ++kmer_count2[kmer];
 

@@ -1,5 +1,6 @@
 #include "model/F_k_function.hpp"
 #include "model/match_tool.hpp"
+#include "model/ry_sampling_word_sets.hpp"
 #include <cmath>
 #include <numeric>
 
