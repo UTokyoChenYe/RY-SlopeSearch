@@ -1,6 +1,7 @@
 #include "model/match_tool.hpp"
 #include "utils/sequence_tool.hpp"
 #include "model/ry_sampling_word_sets.hpp"
+#include "utils/dna_kmer_cache.hpp"
 
 #include <unordered_map>
 #include <string>
@@ -8,6 +9,9 @@
 #include <algorithm>
 #include <cmath>
 #include <set>
+
+// global cache object
+ThreadSafeDnaKmerCache g_dna_kmer_cache;
 
 // extract k-mers with specified pattern
 std::vector<size_t> extract_kmers_with_pattern(const std::vector<std::string>& sequences, int k, const std::string& method) {
@@ -55,12 +59,31 @@ std::vector<size_t> extract_kmers_with_pattern(const std::vector<std::string>& s
 
 // calculate k-mer matches based on specified method
 int calculate_kmer_matches(const std::string& seq1_in, const std::string& seq2_in, int k, bool use_one_to_one, const std::string& method) {
+
     std::vector<std::string> seq1_list = { seq1_in };
     std::vector<std::string> seq2_list = { seq2_in };
 
-    auto kmer_list1 = extract_kmers_with_pattern(seq1_list, k, method);
-    auto kmer_list2 = extract_kmers_with_pattern(seq2_list, k, method);
+    size_t seq_hash1 = std::hash<std::string>()(seq1_in);
+    size_t seq_hash2 = std::hash<std::string>()(seq2_in);
 
+    // calculate combined hash of two lists as key
+    DnaKmerCache key1{ seq_hash1, k, method };
+    DnaKmerCache key2{ seq_hash2, k, method };
+
+    std::vector<size_t> kmer_list1, kmer_list2;
+
+    // thread-safe query cache
+    if (!g_dna_kmer_cache.try_get(key1, kmer_list1)) {
+        kmer_list1 = extract_kmers_with_pattern(seq1_list, k, method);
+        g_dna_kmer_cache.set(key1, kmer_list1);
+    }
+
+    if (!g_dna_kmer_cache.try_get(key2, kmer_list2)) {
+        kmer_list2 = extract_kmers_with_pattern(seq2_list, k, method);
+        g_dna_kmer_cache.set(key2, kmer_list2);
+    }
+
+    // calculate k-mer counts
     std::unordered_map<size_t, int> kmer_count1, kmer_count2;
     for (const auto& kmer : kmer_list1) ++kmer_count1[kmer];
     for (const auto& kmer : kmer_list2) ++kmer_count2[kmer];
