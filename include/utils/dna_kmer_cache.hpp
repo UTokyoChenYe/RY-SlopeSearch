@@ -42,8 +42,12 @@ public:
     bool try_get(const DnaKmerCache& key, std::vector<size_t>& out) {
         std::lock_guard<std::mutex> lock(mtx_);
         auto it = cache_.find(key);
-        if (it == cache_.end()) return false;
+        if (it == cache_.end()) {
+            ++misses_;
+            return false;
+        }
         out = it->second; // if zero-copy is needed, copying is still needed here; can store shared pointers, but more complex
+        ++hits_;
         return true;
     }
 
@@ -57,9 +61,30 @@ public:
         cache_[std::move(key)] = std::move(value);
     }
 
+    // get basic cache statistics (thread-safe)
+    void get_basic_stats(size_t& entries, double& hit_rate) const {
+        std::lock_guard<std::mutex> lock(mtx_);
+        entries = cache_.size();
+        size_t total = hits_ + misses_;
+        hit_rate = (total > 0) ? (100.0 * hits_ / total) : 0.0;
+    }
+
+    // get all vector sizes in the cache (thread-safe)
+    std::vector<size_t> get_all_vector_sizes() const {
+        std::lock_guard<std::mutex> lock(mtx_);
+        std::vector<size_t> sizes;
+        sizes.reserve(cache_.size());
+        for (const auto& [key, vec] : cache_) {
+            sizes.push_back(vec.size());
+        }
+        return sizes;
+    }
+
 private:
     std::unordered_map<DnaKmerCache, std::vector<size_t>, DnaKmerCacheHash> cache_;
-    std::mutex mtx_;
+    mutable std::mutex mtx_;
+    size_t hits_ = 0;
+    size_t misses_ = 0;
 };
 
 // global cache object declaration (only declaration! do not define in multiple translation units)

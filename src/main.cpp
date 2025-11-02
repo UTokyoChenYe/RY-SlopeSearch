@@ -4,6 +4,7 @@
 #include "utils/evolution_model.hpp"
 #include "utils/file_system.hpp"
 #include "utils/progress_bar.hpp"
+#include "utils/dna_kmer_cache.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -149,6 +150,24 @@ int main(int argc, char** argv) {
         thread_log << tid << " ";
     }
     thread_log << "\n";
+
+    // === Cache performance statistics ===
+    size_t cache_entries = 0;
+    double cache_hit_rate = 0.0;
+    g_dna_kmer_cache.get_basic_stats(cache_entries, cache_hit_rate);
+
+    auto sizes = g_dna_kmer_cache.get_all_vector_sizes();
+    size_t total_bytes = 0;
+    for (auto s : sizes) total_bytes += s * sizeof(size_t);
+    double memory_MB = total_bytes / (1024.0 * 1024.0);
+
+    thread_log << "\n[Cache Performance]\n";
+    thread_log << "Cache Entries: " << cache_entries << "\n";
+    thread_log << "Cache Hit Rate: " << std::fixed << std::setprecision(2)
+            << cache_hit_rate << " %\n";
+    thread_log << "Estimated Cache Memory: " << std::fixed << std::setprecision(2)
+            << memory_MB << " MB\n";
+
     thread_log.close();  // close log
 
     // logger.info("Distance matrix computation took " + std::to_string(duration.count()) + " milliseconds");
