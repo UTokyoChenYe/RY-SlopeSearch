@@ -84,38 +84,53 @@ std::vector<size_t> extract_kmers_with_pattern(const std::vector<std::string>& s
     }
 
     // for each sequence
+    // for (const auto& seq : sequences) {
+    //     if (seq.size() < static_cast<size_t>(k)) continue;
+
+    //     // initialize the first pattern window [0, pattern_length)
+    //     size_t pattern_num = 0;
+    //     for (int t = 0; t < pattern_length; ++t) {
+    //         pattern_num = (pattern_num << 1) + (seq[t] == 'C' || seq[t] == 'T');
+    //     }
+
+    //     // check prefix window starting at i = 0
+    //     if (table[pattern_num]) {
+    //         size_t dna_kmer_num = 0;
+    //         for (int j = 0; j < k; ++j)
+    //             dna_kmer_num = dna_kmer_num * 4 + dna_kmer_to_num[seq[j]];
+    //         result.emplace_back(dna_kmer_num);
+    //     }
+
+    //     // now roll forward: remove the leftmost bit, add new rightmost base
+    //     size_t mask = table_size - 1;
+    //     size_t highest_bit_value = 1ULL << (pattern_length - 1); // 100...0
+
+    //     for (size_t i = 1; i + k <= seq.size(); ++i) {
+    //         // remove the old leftmost bit and add new rightmost bit
+    //         int old_bit = (seq[i - 1] == 'C' || seq[i - 1] == 'T');
+    //         int new_bit = (seq[i + pattern_length - 1] == 'C' || seq[i + pattern_length - 1] == 'T');
+    //         pattern_num = ((pattern_num - (old_bit * highest_bit_value)) << 1) + new_bit;
+    //         pattern_num &= mask; // keep pattern_length bits only
+
+    //         if (table[pattern_num]) {
+    //             size_t dna_kmer_num = 0;
+    //             for (size_t j = 0; j < static_cast<size_t>(k); ++j)
+    //                 dna_kmer_num = dna_kmer_num * 4 + dna_kmer_to_num[seq[i + j]];
+    //             result.emplace_back(dna_kmer_num);
+    //         }
+    //     }
+    // }
     for (const auto& seq : sequences) {
-        if (seq.size() < static_cast<size_t>(k)) continue;
-
-        // initialize the first pattern window [0, pattern_length)
         size_t pattern_num = 0;
-        for (int t = 0; t < pattern_length; ++t) {
-            pattern_num = (pattern_num << 1) + (seq[t] == 'C' || seq[t] == 'T');
-        }
-
-        // check prefix window starting at i = 0
-        if (table[pattern_num]) {
-            size_t dna_kmer_num = 0;
-            for (int j = 0; j < k; ++j)
-                dna_kmer_num = dna_kmer_num * 4 + dna_kmer_to_num[seq[j]];
-            result.emplace_back(dna_kmer_num);
-        }
-
-        // now roll forward: remove the leftmost bit, add new rightmost base
-        size_t mask = table_size - 1;
-        size_t highest_bit_value = 1ULL << (pattern_length - 1); // 100...0
-
-        for (size_t i = 1; i + k <= seq.size(); ++i) {
-            // remove the old leftmost bit and add new rightmost bit
-            int old_bit = (seq[i - 1] == 'C' || seq[i - 1] == 'T');
-            int new_bit = (seq[i + pattern_length - 1] == 'C' || seq[i + pattern_length - 1] == 'T');
-            pattern_num = ((pattern_num - (old_bit * highest_bit_value)) << 1) + new_bit;
-            pattern_num &= mask; // keep pattern_length bits only
-
+        for (size_t i = 0; i + k - pattern_length <= seq.size(); ++i) {
+            pattern_num = pattern_num * 2 + (seq[i] == 'C' || seq[i] == 'T');
+            if (i < pattern_length - 1) continue;
+            pattern_num = pattern_num & (table_size - 1);
             if (table[pattern_num]) {
                 size_t dna_kmer_num = 0;
-                for (size_t j = 0; j < static_cast<size_t>(k); ++j)
-                    dna_kmer_num = dna_kmer_num * 4 + dna_kmer_to_num[seq[i + j]];
+                for (size_t j = 0; j < k; ++j) {
+                    dna_kmer_num = dna_kmer_num * 4 + dna_kmer_to_num[seq[i - pattern_length + 1 + j]];
+                }
                 result.emplace_back(dna_kmer_num);
             }
         }
