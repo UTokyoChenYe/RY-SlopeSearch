@@ -14,7 +14,7 @@ parameters:
 #   start_ry_4_9_matches
 #   start_ry_4_push_matches
 #   start_ry_4_pull_matches
-sampling_method: "start_rr_matches"
+sampling_method: "start_ry_matches"
 
 draw_F_k_function: false
 draw_k_max: 30 # if draw_F_k_function is true, the k_max will be used

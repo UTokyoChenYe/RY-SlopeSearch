@@ -17,6 +17,9 @@
 #include <omp.h>
 
 int main(int argc, char** argv) {
+    // === set thread number ===
+    omp_set_num_threads(64);  // 将线程数限制为 64
+
     // === parse command line arguments ===
     std::string config_path;
     for (int i = 0; i < argc - 1; ++i) {
