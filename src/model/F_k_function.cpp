@@ -4,13 +4,11 @@
 #include <cmath>
 #include <numeric>
 
-FKFunction::FKFunction(const std::string& s1, const std::string& s2, const Config& cfg, Logger& log)
-    : seq1(s1), seq2(s2), cfg(cfg), logger(log) {
+FKFunction::FKFunction(const std::string& s1, const std::string& s2, char* dna_kmer_to_num, int pattern_length, std::vector<char>& table, const Config& cfg, Logger& log)
+    : seq1(s1), seq2(s2), dna_kmer_to_num(dna_kmer_to_num), pattern_length(pattern_length), table(table), cfg(cfg), logger(log) {
     L1 = seq1.size();
     L2 = seq2.size();
     L_avg = (L1 + L2) / 2.0;
-    
-    pattern_length = kmer_sampling_methods.at(cfg.sampling_method).get()[0].size();
 
     k_min = std::max(static_cast<int>(std::ceil((std::log(L_avg) + 0.69) / 0.875)), pattern_length);
     k_max = std::max(static_cast<int>(std::floor(std::log(L_avg) / 0.634)), pattern_length);
@@ -22,7 +20,7 @@ void FKFunction::compute_fk() {
     k_max = cfg.draw_F_k_function ? cfg.draw_k_max : k_max;
     k_min = cfg.draw_F_k_function ? pattern_length : k_min;
     for (int k = k_min; k <= k_max; ++k) {
-        double matches = calculate_kmer_matches(seq1, seq2, k, cfg.use_one_to_one_matching, cfg.sampling_method);
+        double matches = calculate_kmer_matches(seq1, seq2, k, cfg.use_one_to_one_matching, cfg.sampling_method, dna_kmer_to_num, pattern_length, table);
         double background = cfg.use_background_matches ? 2 * L1 * L2 * std::pow(0.25, k) : 0.0;
         double F = matches - background;
         if (F <= 0) F = 1e-6;

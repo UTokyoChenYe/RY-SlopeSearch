@@ -5,6 +5,7 @@
 #include "utils/file_system.hpp"
 #include "utils/progress_bar.hpp"
 #include "utils/dna_kmer_cache.hpp"
+#include "model/ry_sampling_word_sets.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -93,6 +94,28 @@ int main(int argc, char** argv) {
     progress_bar.start();
     auto start_time = std::chrono::high_resolution_clock::now();  // start timing
 
+    const auto& patterns_vec = get_patterns(cfg.sampling_method);
+    int pattern_length = get_pattern_length(cfg.sampling_method);
+    std::set<std::string> patterns(patterns_vec.begin(), patterns_vec.end());
+
+    // map the DNA k-mer to a number
+    char dna_kmer_to_num[128] = {0};
+    dna_kmer_to_num['A'] = 0;
+    dna_kmer_to_num['C'] = 1;
+    dna_kmer_to_num['G'] = 2;
+    dna_kmer_to_num['T'] = 3;
+
+    // pattern lookup table
+    size_t table_size = 1ULL << pattern_length; // 2^pattern_length
+    std::vector<char> table(table_size, 0);
+    for (const auto& pattern : patterns) {
+        size_t pattern_num = 0;
+        for (char j : pattern) {
+            pattern_num = (pattern_num << 1) + (j == 'y');
+        }
+        table[pattern_num] = 1;
+    }
+
     #pragma omp parallel for schedule(dynamic) collapse(1) if(cfg.use_openmp)  // OpenMP control
     for (size_t i = 0; i < N; ++i) {
         // === print thread info ===
@@ -107,7 +130,7 @@ int main(int argc, char** argv) {
         }
 
         for (size_t j = i + 1; j < N; ++j) {  // only compute upper triangle part
-            FKFunction fk(sequences[i], sequences[j], cfg, logger);
+            FKFunction fk(sequences[i], sequences[j], dna_kmer_to_num, pattern_length, table, cfg, logger);
             double p_hat = fk.calculate_p_hat();
 
             // === draw Fk function ===

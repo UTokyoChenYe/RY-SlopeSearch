@@ -58,30 +58,31 @@ ThreadSafeDnaKmerCache g_dna_kmer_cache;
 // }
 
 // extract k-mers with specified pattern (prefix-aligned + rolling version)
-std::vector<size_t> extract_kmers_with_pattern(const std::vector<std::string>& sequences, int k, const std::string& method) {
-    const auto& patterns_vec = get_patterns(method);
-    int pattern_length = get_pattern_length(method);
-    std::set<std::string> patterns(patterns_vec.begin(), patterns_vec.end());
+std::vector<size_t> extract_kmers_with_pattern(const std::vector<std::string>& sequences, int k, char* dna_kmer_to_num, int pattern_length, std::vector<char>& table) {
+    // const auto& patterns_vec = get_patterns(method);
+    // int pattern_length = get_pattern_length(method);
+    // std::set<std::string> patterns(patterns_vec.begin(), patterns_vec.end());
 
     std::vector<size_t> result;
-
-    // map the DNA k-mer to a number
-    char dna_kmer_to_num[128] = {0};
-    dna_kmer_to_num['A'] = 0;
-    dna_kmer_to_num['C'] = 1;
-    dna_kmer_to_num['G'] = 2;
-    dna_kmer_to_num['T'] = 3;
-
-    // pattern lookup table
     size_t table_size = 1ULL << pattern_length; // 2^pattern_length
-    std::vector<char> table(table_size, 0);
-    for (const auto& pattern : patterns) {
-        size_t pattern_num = 0;
-        for (char j : pattern) {
-            pattern_num = (pattern_num << 1) + (j == 'y');
-        }
-        table[pattern_num] = 1;
-    }
+
+    // // map the DNA k-mer to a number
+    // char dna_kmer_to_num[128] = {0};
+    // dna_kmer_to_num['A'] = 0;
+    // dna_kmer_to_num['C'] = 1;
+    // dna_kmer_to_num['G'] = 2;
+    // dna_kmer_to_num['T'] = 3;
+
+    // // pattern lookup table
+    // size_t table_size = 1ULL << pattern_length; // 2^pattern_length
+    // std::vector<char> table(table_size, 0);
+    // for (const auto& pattern : patterns) {
+    //     size_t pattern_num = 0;
+    //     for (char j : pattern) {
+    //         pattern_num = (pattern_num << 1) + (j == 'y');
+    //     }
+    //     table[pattern_num] = 1;
+    // }
 
     // for each sequence
     // for (const auto& seq : sequences) {
@@ -122,7 +123,7 @@ std::vector<size_t> extract_kmers_with_pattern(const std::vector<std::string>& s
     // }
     for (const auto& seq : sequences) {
         size_t pattern_num = 0;
-        for (size_t i = 0; i + k - pattern_length <= seq.size(); ++i) {
+        for (size_t i = 0; i + k - pattern_length < seq.size(); ++i) {
             pattern_num = pattern_num * 2 + (seq[i] == 'C' || seq[i] == 'T');
             if (i < pattern_length - 1) continue;
             pattern_num = pattern_num & (table_size - 1);
@@ -142,7 +143,7 @@ std::vector<size_t> extract_kmers_with_pattern(const std::vector<std::string>& s
 
 
 // calculate k-mer matches based on specified method
-int calculate_kmer_matches(const std::string& seq1_in, const std::string& seq2_in, int k, bool use_one_to_one, const std::string& method) {
+int calculate_kmer_matches(const std::string& seq1_in, const std::string& seq2_in, int k, bool use_one_to_one, const std::string& method, char* dna_kmer_to_num, int pattern_length, std::vector<char>& table) {
     // calculate sequence hash
     size_t ori_seq_hash1 = std::hash<std::string>()(seq1_in);
     std::string rc_seq1 = reverse_complement(seq1_in);
@@ -165,12 +166,12 @@ int calculate_kmer_matches(const std::string& seq1_in, const std::string& seq2_i
 
     // thread-safe query cache
     if (!g_dna_kmer_cache.try_get(key1, kmer_list1)) {
-        kmer_list1 = extract_kmers_with_pattern(seq1_list, k, method);
+        kmer_list1 = extract_kmers_with_pattern(seq1_list, k, dna_kmer_to_num, pattern_length, table);
         g_dna_kmer_cache.set(key1, kmer_list1);
     }
 
     if (!g_dna_kmer_cache.try_get(key2, kmer_list2)) {
-        kmer_list2 = extract_kmers_with_pattern(seq2_list, k, method);
+        kmer_list2 = extract_kmers_with_pattern(seq2_list, k, dna_kmer_to_num, pattern_length, table);
         g_dna_kmer_cache.set(key2, kmer_list2);
     }
 

@@ -136,6 +136,24 @@ inline const std::vector<std::string> ry_4_pull_patterns = {
     "yyyyyryyr", "yyyyyryyy", "yyyyyyyyr", "yyyyyyyyy"
 };
 
+// === RY 16 ===
+inline const std::vector<std::string> ry_16_patterns = {
+"rryryrrrrrr", "rryryrrrryr", "rryryrrryrr", "rryryrryrrr", "rryryrryrry", "rryryryrrrr", "rryryryrryr", "rryryryryrr", "rryryryyrrr", "rryryryyrry",
+"rryryyrrrrr", "rryryyrrryr", "rryryyrryrr", "rryryyryrry", "rryryyyrrrr", "rryryyyrryr", "rryryyyryrr", "rryryyyyrrr", "rryryyyyrry", "rryyrrrrrrr",
+"rryyrrrrrry", "rryyrrrrryr", "rryyrrrryrr", "rryyrrryrrr", "rryyrrryrry", "rryyrryrrrr", "rryyrryrrry", "rryyrryrryr", "rryyryrrrrr", "rryyryrrrry",
+"rryyryrrryr", "rryyryrryrr", "rryyryryrrr", "rryyryryrry", "rryyryryyrr", "rryyryyrrrr", "rryyryyrrry", "rryyryyrryr", "rryyryyyrrr", "rryyryyyrry",
+"rryyryyyyrr", "rryyyrrrrrr", "rryyyrrrrry", "rryyyrrrryr", "rryyyrrryrr", "rryyyrryrrr", "rryyyrryrry", "rryyyryrrrr", "rryyyryrrry", "rryyyryrryr",
+"rryyyryyrrr", "rryyyryyrry", "rryyyryyyrr", "rryyyyrrrrr", "rryyyyrrrry", "rryyyyrrryr", "rryyyyrryrr", "rryyyyryrrr", "rryyyyryrry", "rryyyyryyrr",
+"rryyyyyrrrr", "rryyyyyrrry", "rryyyyyrryr", "rryyyyyryrr", "rryyyyyyrry", "ryryryryyrr", "ryryryyyrrr", "ryryryyyrry", "ryryryyyyrr", "ryryyryrrrr",
+"ryryyryrrry", "ryryyryryrr", "ryryyryyrrr", "ryryyryyrry", "ryryyryyyrr", "ryryyyryyrr", "ryryyyyryrr", "ryryyyyyrrr", "ryryyyyyrry", "ryyryyryrrr",
+"ryyryyryrry", "ryyryyyryrr", "ryyyryryrrr", "ryyyryryrry", "ryyyryryyrr", "ryyyryyryrr", "ryyyyryryrr", "ryyyyyryyrr", "ryyyyyyrrrr", "ryyyyyyrrry",
+"ryyyyyyryrr", "ryyyyyyyrrr", "ryyyyyyyrry", "ryyyyyyyyrr", "yryryryryrr", "yryryyryrry", "yryryyyryrr", "yryyryryyrr", "yryyryyyyrr", "yryyyryyyrr",
+"yryyyyryyrr", "yryyyyyryrr", "yryyyyyyrry", "yyryryryrrr", "yyryryryrry", "yyryryryyrr", "yyryryyyrrr", "yyryryyyrry", "yyryryyyyrr", "yyryyryryrr",
+"yyryyryyrrr", "yyryyryyrry", "yyryyryyyrr", "yyryyyryyrr", "yyryyyyryrr", "yyryyyyyrrr", "yyryyyyyrry", "yyyryyyryrr", "yyyryyyyrrr", "yyyryyyyrry",
+"yyyyryryyrr", "yyyyryyryrr", "yyyyryyyrrr", "yyyyryyyrry", "yyyyyryryrr", "yyyyyyryyrr", "yyyyyyyryrr", "yyyyyyyyyrr"
+};
+
+
 // mapping of sampling methods to their corresponding patterns
 // inline to avoid multiple definitions
 inline const std::map<std::string, std::reference_wrapper<const std::vector<std::string>>> kmer_sampling_methods = {
@@ -146,6 +164,7 @@ inline const std::map<std::string, std::reference_wrapper<const std::vector<std:
     {"start_ry_4_9_matches", std::cref(ry_4_9_patterns)},
     {"start_ry_4_push_matches", std::cref(ry_4_push_patterns)},
     {"start_ry_4_pull_matches", std::cref(ry_4_pull_patterns)},
+    {"start_ry_16_matches", std::cref(ry_16_patterns)},
 };
 
 // get the pattern set of the specified sampling method
