@@ -11,7 +11,7 @@ float estimate_jukes_cantor_distance(float p_hat, Logger& logger) {
     }
     try {
         float distance = -0.75f * std::log(1 - (4.0f / 3.0f) * (1 - p_hat));
-        logger.info("Estimated distance (Jukes-Cantor): " + std::to_string(std::max(0.0f, distance)));
+        // logger.info("Estimated distance (Jukes-Cantor): " + std::to_string(std::max(0.0f, distance)));
         return std::max(0.0f, distance);
     } catch (...) {
         std::cerr << "Error calculating Jukes-Cantor distance" << std::endl;

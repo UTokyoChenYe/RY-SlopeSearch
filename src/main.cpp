@@ -1,12 +1,14 @@
 #include "utils/logger.hpp"
 #include "utils/config.hpp"
 #include "model/F_k_function.hpp"
+#include "model/match_tool.hpp"
 #include "utils/evolution_model.hpp"
 #include "utils/file_system.hpp"
 #include "utils/progress_bar.hpp"
-#include "utils/dna_kmer_cache.hpp"
 #include "model/ry_sampling_word_sets.hpp"
+#include "utils/sequence_tool.hpp"
 
+#include <unordered_map>
 #include <fstream>
 #include <sstream>
 #include <tuple>
@@ -16,6 +18,9 @@
 #include <iomanip>
 #include <chrono>
 #include <omp.h>
+#include <cmath>
+#include <numeric>
+
 
 int main(int argc, char** argv) {
     // === set thread number ===
@@ -116,22 +121,79 @@ int main(int argc, char** argv) {
         table[pattern_num] = 1;
     }
 
-    #pragma omp parallel for schedule(dynamic) collapse(1) if(cfg.use_openmp)  // OpenMP control
+    // calculate min and max k-mer length
+    size_t min_seq_len = -1;  // maximum possible value of size_t
+    size_t max_seq_len = 0;
     for (size_t i = 0; i < N; ++i) {
-        // === print thread info ===
-        int thread_id = omp_get_thread_num();
-        int thread_count = omp_get_num_threads();
+        min_seq_len = std::min(min_seq_len, sequences[i].size());
+        max_seq_len = std::max(max_seq_len, sequences[i].size());
+    }
+    size_t min_L_avg = min_seq_len;
+    size_t max_L_avg = max_seq_len;
+    int min_k_min = std::max(static_cast<int>(std::ceil((std::log(min_L_avg) + 0.69) / 0.875)), pattern_length);
+    int max_k_max = std::max(static_cast<int>(std::floor(std::log(max_L_avg) / 0.634)), pattern_length);
 
-        #pragma omp critical(logger_write_critical)
-        {
-            logger.info("OpenMP thread ID: " + std::to_string(thread_id) +
-                        " / total threads: " + std::to_string(thread_count));
-            used_thread_ids.insert(thread_id);
+    // store k-mer counts for each sequence
+    std::vector< std::vector< std::unordered_map<size_t, int> > > kmerCountsMap (N); // Maybe not the fastest way to store k-mer counts, but it's easy to understand
+
+    // transform ATGC to numbers
+    // for (size_t i = 0; i < N; ++i) {
+    //     for (size_t j = 0; j < sequences[i].size(); ++j) {
+    //         sequences[i][j] = dna_kmer_to_num[sequences[i][j]];
+    //     }
+    
+    //     // get reverse complement of sequence
+    //     std::string rc_seq = reverse_complement(sequences[i]);
+    //     std::vector<std::string> seq_list = {sequences[i], rc_seq};
+
+    //     std::vector< std::vector<size_t> > kmer_lists = extract_kmers_with_pattern(seq_list, min_k_min, max_k_max, dna_kmer_to_num, pattern_length, table);
+
+    //     kmerCountsMap[i].resize(max_k_max - min_k_min + 1);
+
+    //     for (int k = min_k_min; k <= max_k_max; ++k) {
+    //         for (auto kmer : kmer_lists[k - min_k_min]) ++kmerCountsMap[i][k - min_k_min][kmer];
+    //     }
+    // }
+
+    #pragma omp parallel for schedule(dynamic) collapse(1) if(cfg.use_openmp)
+    for (size_t i = 0; i < N; ++i) {
+        // 将序列字符转为数字
+        for (size_t j = 0; j < sequences[i].size(); ++j) {
+            sequences[i][j] = dna_kmer_to_num[sequences[i][j]];
         }
 
+        // 获取反向互补序列
+        std::string rc_seq = reverse_complement(sequences[i]);
+        std::vector<std::string> seq_list = {sequences[i], rc_seq};
+
+        // 提取 k-mer（按 pattern 采样）
+        auto kmer_lists = extract_kmers_with_pattern(
+            seq_list, min_k_min, max_k_max,
+            dna_kmer_to_num, pattern_length, table
+        );
+
+        // 初始化该序列的 k-mer 计数容器
+        std::vector<std::unordered_map<size_t, int>> local_counts(
+            max_k_max - min_k_min + 1
+        );
+
+        // 局部统计
+        for (int k = min_k_min; k <= max_k_max; ++k) {
+            for (auto kmer : kmer_lists[k - min_k_min])
+                ++local_counts[k - min_k_min][kmer];
+        }
+
+        // 写回全局结果（每个线程只写自己的 i）
+        kmerCountsMap[i] = std::move(local_counts);
+    }
+
+
+
+    #pragma omp parallel for schedule(dynamic) collapse(1) if(cfg.use_openmp)  // OpenMP control
+    for (size_t i = 0; i < N; ++i) {
         for (size_t j = i + 1; j < N; ++j) {  // only compute upper triangle part
-            FKFunction fk(sequences[i], sequences[j], dna_kmer_to_num, pattern_length, table, cfg, logger);
-            double p_hat = fk.calculate_p_hat();
+            FKFunction fk(sequences[i], sequences[j], pattern_length, min_k_min, cfg, logger);
+            double p_hat = fk.calculate_p_hat(kmerCountsMap[i], kmerCountsMap[j]);
 
             // === draw Fk function ===
             if (cfg.draw_F_k_function) {
@@ -154,14 +216,29 @@ int main(int argc, char** argv) {
             // === compute evolutionary distance ===
             float distance = estimate_jukes_cantor_distance(static_cast<float>(p_hat), logger);
             
-            #pragma omp critical(distance_matrix_write_critical) // when multiple threads write to 2D array, need to protect or avoid data conflict
-            {
-                distance_matrix[i][j] = distance;
-                distance_matrix[j][i] = distance;  // symmetric assignment
-            }
+            distance_matrix[i][j] = distance;
+            distance_matrix[j][i] = distance;  // symmetric assignment
+            
             progress_bar.increment();
         }
     }
+
+    // #pragma omp parallel for schedule(dynamic)
+    // for (size_t index = 0; index < N * (N - 1) / 2; ++index) {
+    //     // 反推 (i, j)
+    //     size_t i = static_cast<size_t>((std::sqrt(8 * index + 1) - 1) / 2);
+    //     size_t j = index - i * (i + 1) / 2 + i + 1;
+
+    //     FKFunction fk(sequences[i], sequences[j], pattern_length, min_k_min, cfg, logger);
+    //     double p_hat = fk.calculate_p_hat(kmerCountsMap[i], kmerCountsMap[j]);
+    //     float distance = estimate_jukes_cantor_distance(static_cast<float>(p_hat), logger);
+
+    //     distance_matrix[i][j] = distance;
+    //     distance_matrix[j][i] = distance;
+
+    //     progress_bar.increment();
+    // }
+
 
     progress_bar.finish();
 
@@ -170,33 +247,8 @@ int main(int argc, char** argv) {
 
     thread_log << "Distance matrix computation took "
            << duration.count() << " milliseconds\n";
-    thread_log << "Unique OpenMP threads used: " << used_thread_ids.size() << "\n";
-    thread_log << "Thread IDs: ";
-    for (int tid : used_thread_ids) {
-        thread_log << tid << " ";
-    }
     thread_log << "\n";
-
-    // === Cache performance statistics ===
-    size_t cache_entries = 0;
-    double cache_hit_rate = 0.0;
-    g_dna_kmer_cache.get_basic_stats(cache_entries, cache_hit_rate);
-
-    auto sizes = g_dna_kmer_cache.get_all_vector_sizes();
-    size_t total_bytes = 0;
-    for (auto s : sizes) total_bytes += s * sizeof(size_t);
-    double memory_MB = total_bytes / (1024.0 * 1024.0);
-
-    thread_log << "\n[Cache Performance]\n";
-    thread_log << "Cache Entries: " << cache_entries << "\n";
-    thread_log << "Cache Hit Rate: " << std::fixed << std::setprecision(2)
-            << cache_hit_rate << " %\n";
-    thread_log << "Estimated Cache Memory: " << std::fixed << std::setprecision(2)
-            << memory_MB << " MB\n";
-
     thread_log.close();  // close log
-
-    // logger.info("Distance matrix computation took " + std::to_string(duration.count()) + " milliseconds");
 
     // === save PHYLIP file ===
     auto now = std::chrono::system_clock::now();

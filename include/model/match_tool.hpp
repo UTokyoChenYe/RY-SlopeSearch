@@ -2,14 +2,37 @@
 #include <string>
 #include <functional>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 /**
- * @brief calculate the number of common k-mers between two DNA sequences
+ * @brief extract k-mers with specified pattern (prefix-aligned + rolling version)
  *
- * @param seq1 sequence 1
- * @param seq2 sequence 2
- * @param k length of k-mer
- * @return int number of common k-mers
+ * @param seq_list list of DNA sequences
+ * @param k_min minimum k-mer length
+ * @param k_max maximum k-mer length
+ * @param dna_kmer_to_num mapping of DNA k-mer to number
+ * @param pattern_length length of pattern
+ * @param table lookup table for pattern
+ * @return vector of k-mer lists
  */
-int calculate_kmer_matches(const std::string& seq1, const std::string& seq2, int k, bool use_one_to_one_matching, const std::string& sampling_method, char* dna_kmer_to_num, int pattern_length, std::vector<char>& table);
+std::vector<std::vector<size_t>> extract_kmers_with_pattern(
+    const std::vector<std::string>& seq_list, 
+    int k_min, 
+    int k_max, 
+    char* dna_kmer_to_num, 
+    int pattern_length, 
+    std::vector<char>& table);
+
+
+/**
+ * @brief calculate k-mer matches based on specified method
+ *
+ * @param kmer_count1 k-mer count map for sequence 1
+ * @param kmer_count2 k-mer count map for sequence 2
+ * @param use_one_to_one whether to use one-to-one matching
+ * @return int number of k-mer matches
+ */
+ int calculate_kmer_matches(
+    const std::unordered_map<size_t, int> &kmer_count1, 
+    const std::unordered_map<size_t, int> &kmer_count2, 
+    bool use_one_to_one);
