@@ -1,4 +1,5 @@
 #include "model/match_tool.hpp"
+#include "model/KmerCount.hpp"
 
 #include <unordered_map>
 #include <string>
@@ -47,21 +48,41 @@ std::vector<std::vector<size_t>> extract_kmers_with_pattern(
 
 // calculate k-mer matches based on specified method
 int calculate_kmer_matches(
-    const std::unordered_map<size_t, int> &kmer_count1, 
-    const std::unordered_map<size_t, int> &kmer_count2, 
+    const std::vector<KmerCount> &kmer_counts1, 
+    const std::vector<KmerCount> &kmer_counts2, 
     bool use_one_to_one) {
 
     int matches = 0;
-    for (const auto& [kmer, count1] : kmer_count1) {
-        auto it = kmer_count2.find(kmer);
-        if (it != kmer_count2.end()) {
+    size_t pos1 = 0;
+    size_t pos2 = 0;
+
+    while (pos1 < kmer_counts1.size() && pos2 < kmer_counts2.size()) {
+        size_t kmer1 = kmer_counts1[pos1].kmer;
+        int count1 = kmer_counts1[pos1].count;
+        size_t kmer2 = kmer_counts2[pos2].kmer;
+        int count2 = kmer_counts2[pos2].count;
+
+        if (kmer1 == kmer2) {
             if (use_one_to_one) {
-                matches += std::min(count1, it->second);
+                matches += std::min(count1, count2);
             } else {
-                matches += count1 * it->second;
+                matches += count1 * count2;
             }
         }
+
+        if (kmer1 <= kmer2) ++pos1;
+        if (kmer2 <= kmer1) ++pos2;
     }
+    // for (const auto& [kmer, count1] : kmer_count1) {
+    //     auto it = kmer_count2.find(kmer);
+    //     if (it != kmer_count2.end()) {
+    //         if (use_one_to_one) {
+    //             matches += std::min(count1, it->second);
+    //         } else {
+    //             matches += count1 * it->second;
+    //         }
+    //     }
+    // }
     return matches;
 }
 

@@ -3,13 +3,15 @@
 #include <vector>
 #include "utils/logger.hpp"
 #include "utils/config.hpp"
+#include "model/KmerCount.hpp"
+
 #include <unordered_map>
 
 class FKFunction {
 public:
     FKFunction(const std::string& seq1, const std::string& seq2, int pattern_length, int min_k_min, const Config& cfg, Logger& logger);
-    double calculate_p_hat(const std::vector< std::unordered_map<size_t, int> > &kmer_counts1,const std::vector< std::unordered_map<size_t, int> > &kmer_counts2);
-    void compute_fk(const std::vector< std::unordered_map<size_t, int> > &kmer_counts1, const std::vector< std::unordered_map<size_t, int> > &kmer_counts2);
+    double calculate_p_hat(const std::vector<std::vector<KmerCount>> &kmer_counts1,const std::vector<std::vector<KmerCount>> &kmer_counts2);
+    void compute_fk(const std::vector<std::vector<KmerCount>> &kmer_counts1, const std::vector<std::vector<KmerCount>> &kmer_counts2);
     const std::vector<double>& get_FkLog() const { return Fk_log; }
     std::vector<int> k_vals;
     std::vector<double> Fk;

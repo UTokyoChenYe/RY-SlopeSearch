@@ -4,6 +4,8 @@
 #include <vector>
 #include <unordered_map>
 
+#include "model/KmerCount.hpp"
+
 /**
  * @brief extract k-mers with specified pattern (prefix-aligned + rolling version)
  *
@@ -27,12 +29,12 @@ std::vector<std::vector<size_t>> extract_kmers_with_pattern(
 /**
  * @brief calculate k-mer matches based on specified method
  *
- * @param kmer_count1 k-mer count map for sequence 1
- * @param kmer_count2 k-mer count map for sequence 2
+ * @param kmer_counts1 vector of k-mer counts for sequence 1
+ * @param kmer_counts2 vector of k-mer counts for sequence 2
  * @param use_one_to_one whether to use one-to-one matching
  * @return int number of k-mer matches
  */
  int calculate_kmer_matches(
-    const std::unordered_map<size_t, int> &kmer_count1, 
-    const std::unordered_map<size_t, int> &kmer_count2, 
+    const std::vector<KmerCount> &kmer_counts1, 
+    const std::vector<KmerCount> &kmer_counts2, 
     bool use_one_to_one);

@@ -7,6 +7,7 @@
 #include "utils/progress_bar.hpp"
 #include "model/ry_sampling_word_sets.hpp"
 #include "utils/sequence_tool.hpp"
+#include "model/KmerCount.hpp"
 
 #include <unordered_map>
 #include <fstream>
@@ -20,7 +21,6 @@
 #include <omp.h>
 #include <cmath>
 #include <numeric>
-
 
 int main(int argc, char** argv) {
     // === set thread number ===
@@ -134,19 +134,45 @@ int main(int argc, char** argv) {
     int max_k_max = std::max(static_cast<int>(std::floor(std::log(max_L_avg) / 0.634)), pattern_length);
 
     // store k-mer counts for each sequence
-    std::vector< std::vector< std::unordered_map<size_t, int> > > kmerCountsMap (N); // Maybe not the fastest way to store k-mer counts, but it's easy to understand
+    // std::vector< std::vector< std::unordered_map<size_t, int> > > kmerCountsMap (N); // Maybe not the fastest way to store k-mer counts, but it's easy to understand
+    std::vector< std::vector< std::vector<KmerCount> > > kmerCounts(N);
 
     // transform ATGC to numbers
-    // for (size_t i = 0; i < N; ++i) {
-    //     for (size_t j = 0; j < sequences[i].size(); ++j) {
-    //         sequences[i][j] = dna_kmer_to_num[sequences[i][j]];
-    //     }
+    #pragma omp parallel for schedule(dynamic) collapse(1) if(cfg.use_openmp)
+    for (size_t i = 0; i < N; ++i) {
+        for (size_t j = 0; j < sequences[i].size(); ++j) {
+            sequences[i][j] = dna_kmer_to_num[sequences[i][j]];
+        }
     
-    //     // get reverse complement of sequence
-    //     std::string rc_seq = reverse_complement(sequences[i]);
-    //     std::vector<std::string> seq_list = {sequences[i], rc_seq};
+        // get reverse complement of sequence
+        std::string rc_seq = reverse_complement(sequences[i]);
+        std::vector<std::string> seq_list = {sequences[i], rc_seq};
 
-    //     std::vector< std::vector<size_t> > kmer_lists = extract_kmers_with_pattern(seq_list, min_k_min, max_k_max, dna_kmer_to_num, pattern_length, table);
+        std::vector< std::vector<size_t> > kmer_lists = extract_kmers_with_pattern(seq_list, min_k_min, max_k_max, dna_kmer_to_num, pattern_length, table);
+
+        kmerCounts[i].resize(max_k_max - min_k_min + 1);
+
+        for (int k = min_k_min; k <= max_k_max; ++k) {
+            std::vector<size_t> &kmer_list = kmer_lists[k - min_k_min];
+            std::vector<KmerCount> &counts = kmerCounts[i][k - min_k_min];
+
+            sort(kmer_list.begin(), kmer_list.end());
+
+            size_t oldPos = 0;
+            size_t newPos = 0;
+
+            while (newPos < kmer_list.size()) {
+                ++newPos;
+                if (newPos == kmer_list.size() || kmer_list[newPos] > kmer_list[oldPos]) {
+                    int count_of_old_kmer = newPos - oldPos;
+                    KmerCount kc = {kmer_list[oldPos], count_of_old_kmer};
+                    counts.push_back(kc);
+                    oldPos = newPos;
+                }
+            }
+
+        }
+    }
 
     //     kmerCountsMap[i].resize(max_k_max - min_k_min + 1);
 
@@ -155,37 +181,37 @@ int main(int argc, char** argv) {
     //     }
     // }
 
-    #pragma omp parallel for schedule(dynamic) collapse(1) if(cfg.use_openmp)
-    for (size_t i = 0; i < N; ++i) {
-        // 将序列字符转为数字
-        for (size_t j = 0; j < sequences[i].size(); ++j) {
-            sequences[i][j] = dna_kmer_to_num[sequences[i][j]];
-        }
+    // #pragma omp parallel for schedule(dynamic) collapse(1) if(cfg.use_openmp)
+    // for (size_t i = 0; i < N; ++i) {
+    //     // 将序列字符转为数字
+    //     for (size_t j = 0; j < sequences[i].size(); ++j) {
+    //         sequences[i][j] = dna_kmer_to_num[sequences[i][j]];
+    //     }
 
-        // 获取反向互补序列
-        std::string rc_seq = reverse_complement(sequences[i]);
-        std::vector<std::string> seq_list = {sequences[i], rc_seq};
+    //     // 获取反向互补序列
+    //     std::string rc_seq = reverse_complement(sequences[i]);
+    //     std::vector<std::string> seq_list = {sequences[i], rc_seq};
 
-        // 提取 k-mer（按 pattern 采样）
-        auto kmer_lists = extract_kmers_with_pattern(
-            seq_list, min_k_min, max_k_max,
-            dna_kmer_to_num, pattern_length, table
-        );
+    //     // 提取 k-mer（按 pattern 采样）
+    //     auto kmer_lists = extract_kmers_with_pattern(
+    //         seq_list, min_k_min, max_k_max,
+    //         dna_kmer_to_num, pattern_length, table
+    //     );
 
-        // 初始化该序列的 k-mer 计数容器
-        std::vector<std::unordered_map<size_t, int>> local_counts(
-            max_k_max - min_k_min + 1
-        );
+    //     // 初始化该序列的 k-mer 计数容器
+    //     std::vector<std::unordered_map<size_t, int>> local_counts(
+    //         max_k_max - min_k_min + 1
+    //     );
 
-        // 局部统计
-        for (int k = min_k_min; k <= max_k_max; ++k) {
-            for (auto kmer : kmer_lists[k - min_k_min])
-                ++local_counts[k - min_k_min][kmer];
-        }
+    //     // 局部统计
+    //     for (int k = min_k_min; k <= max_k_max; ++k) {
+    //         for (auto kmer : kmer_lists[k - min_k_min])
+    //             ++local_counts[k - min_k_min][kmer];
+    //     }
 
-        // 写回全局结果（每个线程只写自己的 i）
-        kmerCountsMap[i] = std::move(local_counts);
-    }
+    //     // 写回全局结果（每个线程只写自己的 i）
+    //     kmerCountsMap[i] = std::move(local_counts);
+    // }
 
 
 
@@ -193,7 +219,8 @@ int main(int argc, char** argv) {
     for (size_t i = 0; i < N; ++i) {
         for (size_t j = i + 1; j < N; ++j) {  // only compute upper triangle part
             FKFunction fk(sequences[i], sequences[j], pattern_length, min_k_min, cfg, logger);
-            double p_hat = fk.calculate_p_hat(kmerCountsMap[i], kmerCountsMap[j]);
+            // double p_hat = fk.calculate_p_hat(kmerCountsMap[i], kmerCountsMap[j]);
+            double p_hat = fk.calculate_p_hat(kmerCounts[i], kmerCounts[j]);
 
             // === draw Fk function ===
             if (cfg.draw_F_k_function) {

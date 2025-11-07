@@ -1,5 +1,7 @@
 #include "model/F_k_function.hpp"
 #include "model/match_tool.hpp"
+#include "model/KmerCount.hpp"
+
 #include <cmath>
 #include <numeric>
 
@@ -14,8 +16,8 @@ FKFunction::FKFunction(const std::string& s1, const std::string& s2, int pattern
     // logger.info("Initialized FKFunction with k range: " + std::to_string(k_min) + "-" + std::to_string(k_max));
 }
 
-void FKFunction::compute_fk(const std::vector< std::unordered_map<size_t, int> > &kmer_counts1,
-    const std::vector< std::unordered_map<size_t, int> > &kmer_counts2) {
+void FKFunction::compute_fk(const std::vector<std::vector<KmerCount>> &kmer_counts1,
+    const std::vector<std::vector<KmerCount>> &kmer_counts2) {
         k_max = cfg.draw_F_k_function ? cfg.draw_k_max : k_max;
         k_min = cfg.draw_F_k_function ? pattern_length : k_min;
         for (int k = k_min; k <= k_max; ++k) {
@@ -30,8 +32,8 @@ void FKFunction::compute_fk(const std::vector< std::unordered_map<size_t, int> >
     }
     
 
-double FKFunction::calculate_p_hat(const std::vector< std::unordered_map<size_t, int> > &kmer_counts1,
-    const std::vector< std::unordered_map<size_t, int> > &kmer_counts2) {
+double FKFunction::calculate_p_hat( const std::vector<std::vector<KmerCount>> &kmer_counts1,
+    const std::vector<std::vector<KmerCount>> &kmer_counts2) {
         compute_fk(kmer_counts1, kmer_counts2);
         std::vector<double> x(k_vals.begin(), k_vals.end());
         std::vector<double> y(Fk_log.begin(), Fk_log.end());
