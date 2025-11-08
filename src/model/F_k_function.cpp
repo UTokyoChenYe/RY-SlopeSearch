@@ -13,7 +13,6 @@ FKFunction::FKFunction(const std::string& s1, const std::string& s2, int pattern
     k_min = std::max(static_cast<int>(std::ceil((std::log(L_avg) + 0.69) / 0.875)), pattern_length);
     k_max = std::max(static_cast<int>(std::floor(std::log(L_avg) / 0.634)), pattern_length);
     if (k_min < pattern_length) logger.warn("k_min < pattern_length, adjusted to pattern_length");
-    // logger.info("Initialized FKFunction with k range: " + std::to_string(k_min) + "-" + std::to_string(k_max));
 }
 
 void FKFunction::compute_fk(const std::vector<std::vector<KmerCount>> &kmer_counts1,
@@ -22,6 +21,7 @@ void FKFunction::compute_fk(const std::vector<std::vector<KmerCount>> &kmer_coun
         k_min = cfg.draw_F_k_function ? pattern_length : k_min;
         for (int k = k_min; k <= k_max; ++k) {
             double matches = calculate_kmer_matches(kmer_counts1[k - min_k_min], kmer_counts2[k - min_k_min], cfg.use_one_to_one_matching);
+            // double matches = calculate_kmer_matches_parallel(kmer_counts1[k - min_k_min], kmer_counts2[k - min_k_min], cfg.use_one_to_one_matching);
             double background = cfg.use_background_matches ? 2 * L1 * L2 * std::pow(0.25, k) : 0.0;
             double F = matches - background;
             if (F <= 0) F = 1e-6;

@@ -38,3 +38,8 @@ std::vector<std::vector<size_t>> extract_kmers_with_pattern(
     const std::vector<KmerCount> &kmer_counts1, 
     const std::vector<KmerCount> &kmer_counts2, 
     bool use_one_to_one);
+
+int calculate_kmer_matches_parallel(
+    const std::vector<KmerCount>& A,
+    const std::vector<KmerCount>& B,
+    bool use_one_to_one);

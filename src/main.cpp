@@ -134,10 +134,7 @@ int main(int argc, char** argv) {
     int max_k_max = std::max(static_cast<int>(std::floor(std::log(max_L_avg) / 0.634)), pattern_length);
 
     // store k-mer counts for each sequence
-    // std::vector< std::vector< std::unordered_map<size_t, int> > > kmerCountsMap (N); // Maybe not the fastest way to store k-mer counts, but it's easy to understand
     std::vector< std::vector< std::vector<KmerCount> > > kmerCounts(N);
-
-    // transform ATGC to numbers
     #pragma omp parallel for schedule(dynamic) collapse(1) if(cfg.use_openmp)
     for (size_t i = 0; i < N; ++i) {
         for (size_t j = 0; j < sequences[i].size(); ++j) {
@@ -173,45 +170,6 @@ int main(int argc, char** argv) {
 
         }
     }
-
-    //     kmerCountsMap[i].resize(max_k_max - min_k_min + 1);
-
-    //     for (int k = min_k_min; k <= max_k_max; ++k) {
-    //         for (auto kmer : kmer_lists[k - min_k_min]) ++kmerCountsMap[i][k - min_k_min][kmer];
-    //     }
-    // }
-
-    // #pragma omp parallel for schedule(dynamic) collapse(1) if(cfg.use_openmp)
-    // for (size_t i = 0; i < N; ++i) {
-    //     // 将序列字符转为数字
-    //     for (size_t j = 0; j < sequences[i].size(); ++j) {
-    //         sequences[i][j] = dna_kmer_to_num[sequences[i][j]];
-    //     }
-
-    //     // 获取反向互补序列
-    //     std::string rc_seq = reverse_complement(sequences[i]);
-    //     std::vector<std::string> seq_list = {sequences[i], rc_seq};
-
-    //     // 提取 k-mer（按 pattern 采样）
-    //     auto kmer_lists = extract_kmers_with_pattern(
-    //         seq_list, min_k_min, max_k_max,
-    //         dna_kmer_to_num, pattern_length, table
-    //     );
-
-    //     // 初始化该序列的 k-mer 计数容器
-    //     std::vector<std::unordered_map<size_t, int>> local_counts(
-    //         max_k_max - min_k_min + 1
-    //     );
-
-    //     // 局部统计
-    //     for (int k = min_k_min; k <= max_k_max; ++k) {
-    //         for (auto kmer : kmer_lists[k - min_k_min])
-    //             ++local_counts[k - min_k_min][kmer];
-    //     }
-
-    //     // 写回全局结果（每个线程只写自己的 i）
-    //     kmerCountsMap[i] = std::move(local_counts);
-    // }
 
 
 
