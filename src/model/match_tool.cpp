@@ -45,7 +45,6 @@ std::vector<std::vector<size_t>> extract_kmers_with_pattern(
     return result;
 }
 
-
 //calculate k-mer matches based on specified method
 int calculate_kmer_matches(
     const std::vector<KmerCount> &kmer_counts1, 
@@ -73,73 +72,4 @@ int calculate_kmer_matches(
         if (kmer2 <= kmer1) ++pos2;
     }
     return matches;
-}
-
-
-struct Range {
-    uint64_t start;
-    uint64_t end;
-};
-
-int calculate_kmer_matches_parallel(
-    const std::vector<KmerCount>& A,
-    const std::vector<KmerCount>& B,
-    bool use_one_to_one)
-{
-    size_t n1 = A.size();
-    size_t n2 = B.size();
-    int num_threads = omp_get_max_threads();
-
-    // === 1. 计算范围分割 ===
-    std::vector<Range> ranges;
-    ranges.reserve(num_threads);
-    uint64_t min_k = std::min(A.front().kmer, B.front().kmer);
-    uint64_t max_k = std::max(A.back().kmer, B.back().kmer);
-    uint64_t step = (max_k - min_k + num_threads - 1) / num_threads;
-    for (int t = 0; t < num_threads; ++t) {
-        ranges.push_back({min_k + t * step, min_k + (t + 1) * step});
-    }
-
-    // === 2. 每个线程处理一个区间 ===
-    std::vector<int> thread_matches(num_threads, 0);
-
-    #pragma omp parallel for num_threads(num_threads) schedule(static)
-    for (int t = 0; t < num_threads; ++t) {
-        auto [start, end] = ranges[t];
-        // 二分查找起始位置（保证线程边界准确）
-        auto it1 = std::lower_bound(A.begin(), A.end(), start,
-            [](const KmerCount& x, uint64_t val){ return x.kmer < val; });
-        auto it2 = std::lower_bound(B.begin(), B.end(), start,
-            [](const KmerCount& x, uint64_t val){ return x.kmer < val; });
-
-        auto end1 = std::lower_bound(A.begin(), A.end(), end,
-            [](const KmerCount& x, uint64_t val){ return x.kmer < val; });
-        auto end2 = std::lower_bound(B.begin(), B.end(), end,
-            [](const KmerCount& x, uint64_t val){ return x.kmer < val; });
-
-        size_t i = it1 - A.begin();
-        size_t j = it2 - B.begin();
-        size_t e1 = end1 - A.begin();
-        size_t e2 = end2 - B.begin();
-
-        int local_matches = 0;
-
-        while (i < e1 && j < e2) {
-            uint64_t k1 = A[i].kmer;
-            uint64_t k2 = B[j].kmer;
-            if (k1 == k2) {
-                local_matches += use_one_to_one
-                    ? std::min(A[i].count, B[j].count)
-                    : A[i].count * B[j].count;
-            }
-            i += (k1 <= k2);
-            j += (k2 <= k1);
-        }
-        thread_matches[t] = local_matches;
-    }
-
-    // === 3. 汇总 ===
-    int total_matches = 0;
-    for (auto v : thread_matches) total_matches += v;
-    return total_matches;
 }
