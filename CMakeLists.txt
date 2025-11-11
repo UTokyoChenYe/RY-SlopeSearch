@@ -56,17 +56,17 @@ project(RY-SlopeSearch)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# # === Ensure that the build type is Release ===
-# set(CMAKE_BUILD_TYPE Release)
+# === Ensure that the build type is Release ===
+set(CMAKE_BUILD_TYPE Release)
 
-# # === set optimization level to -O3 for Release builds ===
-# set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+# === set optimization level to -O3 for Release builds ===
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
-# === Build type ===
-set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
+# # === Build type ===
+# set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
 
-# === Optimization + Debug symbols ===
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -fno-omit-frame-pointer")
+# # === Optimization + Debug symbols ===
+# set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -fno-omit-frame-pointer")
 
 # === OpenMP option switch ===
 option(USE_OPENMP "Enable OpenMP parallelization" ON)
