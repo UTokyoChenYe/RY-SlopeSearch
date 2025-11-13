@@ -1,11 +1,11 @@
 dataset:
-  datasets_directory: "/big/chenye/data/RY-SlopeSearch/af_project_dataset/AF-reference_datasets190511/genome-std-assembled-fish_mito/dataset/assembled-fish_mito"
+  datasets_directory: "/big/chenye/data/RY-SlopeSearch/af_project_dataset/AF-reference_datasets190511/genome-std-assembled-ecoli/dataset/assembled-ecoli"
 # /big/chenye/data/RY-SlopeSearch/af_project_dataset/AF-reference_datasets190511/genome-std-assembled-fish_mito/dataset/assembled-fish_mito
 # /big/chenye/data/RY-SlopeSearch/af_project_dataset/AF-reference_datasets190511/genome-std-assembled-ecoli/dataset/assembled-ecoli
 # /big/chenye/data/RY-SlopeSearch/af_project_dataset/AF-reference_datasets190511/genome-std-assembled-plants/dataset/assembled-plants
 
 parameters:
-  using_one_to_one_matching: true
+  using_one_to_one_matching: false
   using_background_matches: false
   use_openmp: true
 
