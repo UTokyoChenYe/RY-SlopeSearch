@@ -28,7 +28,7 @@ make
 #### Step 1: Create a output folder
 - Example Output Folder: `RY-SlopeSearch/example/example_output`
 
-#### Step 1: Editing configure
+#### Step 2: Editing configure
 config location: `RY-SlopeSearch/example/example_config.yaml`
 ```yaml
 dataset:
@@ -88,10 +88,13 @@ The parameters of configs
 
 *All paths are required to be **absolute paths** .*
 
-#### Step 2: Run Program
+#### Step 3: Run Program
 - Enter into build folder: `cd ./build`
 - Run the program: `./RY-SlopeSearch --config (RY-SlopeSearch project root)/configs/example_config.yaml`
   - `--config`: the location of your config
 
-#### Step 3: Check the result
+#### Step 4: Check the result
 All results are in `output_directory`
+
+### Contact
+If you have any questiones, please feel free to leave a message to me!
