@@ -96,5 +96,5 @@ The parameters of configs
 #### Step 4: Check the result
 All results are in `output_directory`
 
-### Contact
+## Contact
 If you have any questiones, please feel free to leave a message to me!
