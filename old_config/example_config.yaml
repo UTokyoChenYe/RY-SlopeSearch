@@ -12,11 +12,8 @@ parameters:
 # methods
 #   basic_kmer_matches
 #   start_ry_matches
-#   start_rr_matches
 #   start_ry_4_6_matches
 #   start_ry_4_9_matches
-#   start_ry_4_push_matches
-#   start_ry_4_pull_matches
 #   start_ry_16_matches
 #   start_ry_32_matches
 #   start_ry_64_matches
