@@ -24,6 +24,8 @@ make
 #### Example location
 - Example Folder: `RY-SlopeSearch/example`
 - Example Data: `RY-SlopeSearch/example/example_data/assembled-ecoli`
+
+#### Step 1: Create a output folder
 - Example Output Folder: `RY-SlopeSearch/example/example_output`
 
 #### Step 1: Editing configure
