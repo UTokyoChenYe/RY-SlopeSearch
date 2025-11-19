@@ -12,18 +12,46 @@ Here is the offical source code of RY-SlopeSearch, which is an slope-based align
   - yaml-cpp Library: Used for YAML configuration parsing
   - OpenMP: Optional, but if enabled, it requires a compatible OpenMP installation for parallel processing support
 
-### Installing
+### Installation
 ```shell
-git clone git@github.com:UTokyoChenYe/RY-SlopeSearch.git
-git submodule update --init --recursive
+git clone --recursive git@github.com:UTokyoChenYe/RY-SlopeSearch.git
 cd RY-SlopeSearch
 mkdir build && cd build
-cmake .. //Using GCC >= 12.3.0 (example)cmake .. -DCMAKE_C_COMPILER=/usr/bin/gcc-12 -DCMAKE_CXX_COMPILER=/usr/bin/g++-12
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/gcc-12 -DCMAKE_CXX_COMPILER=/usr/bin/g++-12 ..
 make
 ```
-### How to use
-If you have already been in build folder, run `./RY-SlopeSearch --config {the path to your config}`.
+### How to run an example
+#### Example location
+- Example Folder: `RY-SlopeSearch/example`
+- Example Data: `RY-SlopeSearch/example/example_data/assembled-ecoli`
+- Example Output Folder: `RY-SlopeSearch/example/example_output`
 
+#### Step 1: Editing configure
+config location: `RY-SlopeSearch/example/example_config.yaml`
+```yaml
+dataset:
+  datasets_directory: "(RY-SlopeSearch Project Root)/example/example_data/assembled-ecoli"
+
+parameters:
+  using_one_to_one_matching: true
+  using_background_matches: false
+  use_openmp: true
+
+# methods
+#   basic_kmer_matches
+#   start_ry_matches
+#   start_ry_4_6_matches
+#   start_ry_4_9_matches
+#   start_ry_16_matches
+#   start_ry_32_matches
+#   start_ry_64_matches
+#   start_ry_128_matches
+sampling_method: "start_ry_128_matches"
+
+output_directory: "(RY-SlopeSearch Project Root)/example/example_output"
+
+use_progress_bar: true
+```
 The parameters of configs
 
 | Parameter                     | Description                                                                          |
@@ -33,11 +61,20 @@ The parameters of configs
 | `parameters.using_background_matches`  | Enables background matches if set to true.                               |
 | `parameters.use_openmp`       | Enables multi-threaded computation with OpenMP if supported in your environment.     |
 | `sampling_method`             | Specifies the name of the sampling algorithm to use.                                  |
-| `draw_F_k_function`           | If true, the F_k function graph will be generated.                                   |
-| `draw_k_max`                  | The upper limit for k value in the graph, effective only if draw_F_k_function is true.|
 | `output_directory`            | Specifies the path where the output files will be saved.                             |
+| `use_progress_bar`            | Enables progress bar when doing calculation if set to true.                       |
+
 - `fasta` files should be collected under `dataset.datasets_directory`
 - each `fasta` file has one genome
+- All supported word sets are listed in the comments.
+  - basic_kmer_matches: all k-mers
+  - start_ry_matches: RY word set
+  - start_ry_4_6_matches: RY 4-6 word set
+  - start_ry_4_9_matches: RY 4-9 word set
+  - start_ry_16_matches: RY16-11 word set
+  - start_ry_32_matches: RY32-11 word set
+  - start_ry_64_matches: RY64-13 word set
+  - start_ry_128_matches: RY128-12 word set
 - output:
   - a time stamp folder will be created under `output_directory`, your results are in there
   - results includes:
@@ -45,11 +82,14 @@ The parameters of configs
     - runtime log
     - `.phy` distance matrix
     - performance log
-      - thread info
       - time of matrix computation
 
-### Other tool
-| Methods                     | Description                                                                          |
-|-------------------------------|--------------------------------------------------------------------------------------|
-| `./scripts/plot.sh`  | draw $F(k)$.                       |
+*All paths are required to be **absolute paths** .*
 
+#### Step 2: Run Program
+- Enter into build folder: `cd ./build`
+- Run the program: `./RY-SlopeSearch --config (RY-SlopeSearch project root)/configs/example_config.yaml`
+  - `--config`: the location of your config
+
+#### Step 3: Check the result
+All results are in `output_directory`

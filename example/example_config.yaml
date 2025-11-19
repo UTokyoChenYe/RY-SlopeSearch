@@ -20,9 +20,6 @@ parameters:
 #   start_ry_128_matches
 sampling_method: "start_ry_128_matches"
 
-draw_F_k_function: false
-draw_k_max: 30 # if draw_F_k_function is true, the k_max will be used
-
 output_directory: "/big/chenye/code/RY-SlopeSearch/example/example_output"
 
 use_progress_bar: true

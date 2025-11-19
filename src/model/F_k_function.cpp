@@ -17,8 +17,6 @@ FKFunction::FKFunction(const std::string& s1, const std::string& s2, int pattern
 
 void FKFunction::compute_fk(const std::vector<std::vector<KmerCount>> &kmer_counts1,
     const std::vector<std::vector<KmerCount>> &kmer_counts2) {
-        k_max = cfg.draw_F_k_function ? cfg.draw_k_max : k_max;
-        k_min = cfg.draw_F_k_function ? pattern_length : k_min;
         for (int k = k_min; k <= k_max; ++k) {
             double matches = calculate_kmer_matches(kmer_counts1[k - min_k_min], kmer_counts2[k - min_k_min], cfg.use_one_to_one_matching);
             // double matches = calculate_kmer_matches_parallel(kmer_counts1[k - min_k_min], kmer_counts2[k - min_k_min], cfg.use_one_to_one_matching);

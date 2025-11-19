@@ -179,24 +179,6 @@ int main(int argc, char** argv) {
             // double p_hat = fk.calculate_p_hat(kmerCountsMap[i], kmerCountsMap[j]);
             double p_hat = fk.calculate_p_hat(kmerCounts[i], kmerCounts[j]);
 
-            // === draw Fk function ===
-            if (cfg.draw_F_k_function) {
-                std::string pair_name = "seq_" + names[i] + "_vs_seq_" + names[j];
-                std::string fk_csv_path = output_dir + "/" + pair_name + "_Fk.csv";
-                std::ofstream fk_out(fk_csv_path);
-                if (!fk_out) {
-                    logger.error("Failed to write Fk CSV file: " + fk_csv_path);
-                    continue;
-                } else {
-                    fk_out << "k,Fk,log_Fk\n";
-                    for (size_t idx = 0; idx < fk.k_vals.size(); ++idx) {
-                        fk_out << fk.k_vals[idx] << "," << fk.Fk[idx] << "," << fk.Fk_log[idx] << "\n";
-                    }
-                    fk_out.close();
-                    logger.info("Saved Fk curve to: " + fk_csv_path);
-                }
-            }
-
             // === compute evolutionary distance ===
             float distance = estimate_jukes_cantor_distance(static_cast<float>(p_hat), logger);
             
