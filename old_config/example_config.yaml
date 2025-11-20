@@ -18,7 +18,7 @@ parameters:
 #   start_ry_32_matches
 #   start_ry_64_matches
 #   start_ry_128_matches
-sampling_method: "basic_kmer_matches"
+sampling_method: "start_ry_128_matches"
 
 output_directory: "/big/chenye/result/RY-SlopeSearch"
 

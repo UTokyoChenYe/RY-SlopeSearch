@@ -20,6 +20,9 @@ mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/gcc-12 -DCMAKE_CXX_COMPILER=/usr/bin/g++-12 ..
 make
 ```
+
+*ignore `warning: use of ‘std::hardware_destructive_interference_size’`*
+
 ### How to run an example
 #### Example location
 - Example Folder: `RY-SlopeSearch/example`
