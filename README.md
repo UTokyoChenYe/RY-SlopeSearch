@@ -96,5 +96,8 @@ The parameters of configs
 #### Step 4: Check the result
 All results are in `output_directory`
 
+#### Step 5: Upload `.phy` file to AFProject website
+You can upload your `.phy` file of fish_mito genomes (example data) to [AFProject-benchmark-fish_mito](https://afproject.org/app/benchmark/genome/std/assembled/fish_mito/) to check nRF/nQD and your ranking.
+
 ## Contact
 If you have any questiones, please feel free to leave a message to me!
